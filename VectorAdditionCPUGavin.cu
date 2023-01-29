@@ -33,7 +33,6 @@ void Innitialize()
 }
 
 //Cleaning up memory after we are finished.
-
 void CleanUp()
 {
 	free(A_CPU);
