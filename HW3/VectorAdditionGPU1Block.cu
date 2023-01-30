@@ -40,7 +40,7 @@ void AllocateMemory()
 }
 
 //Loads values into vectors that we will add.
-void Innitialize()
+void Initialize()
 {
 	int i;
 	
@@ -62,7 +62,11 @@ void CleanUp()
 //It adds vectors A and B then stores result in vector C
 __global__ void AdditionGPU(float *a, float *b, float *c, int n)
 {
-	//???
+	int i = threadIdx.x + blockDim.x*blockIdx.x;
+	if(i < N)
+	{
+	c[i] = a[i] + b[i];
+	}
 }
 
 int main()
@@ -77,19 +81,23 @@ int main()
 	AllocateMemory();
 
 	//Loading up values to be added.
-	Innitialize();
+	Initialize();
 	
 	//Starting the timer
 	gettimeofday(&start, NULL);
 
 	//Copy Memory from CPU to GPU		
-	??? 
+	//host -> device
+	cudaMemcpy(&A_GPU, A_GPU, &B_GPU, B_GPU, &C_GPU, C_GPU,  N*sizeof(float), cudaMemcpyHostToDevice);
+	
 	
 	//Calling the Kernel (GPU) function.	
-	AdditionGPU???(A_GPU, B_GPU, C_GPU, N);
+	AdditionGPU<<<GridSize.x, BlockSize.x>>>(A_GPU, B_GPU, C_GPU, N);
 	
 	//Copy Memory from GPU to CPU	
-	???
+	//device -> host
+	cudaMemcpy(A_GPU, B_GPU, C_GPU, N*sizeof(float), cudaMemcpyDeviceToHost);
+
 
 	//Stopping the timer
 	gettimeofday(&end, NULL);
