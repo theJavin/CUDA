@@ -20,7 +20,7 @@ void SetUpCudaDevices()
 	BlockSize.y = 1;
 	BlockSize.z = 1;
 	
-	GridSize.x = ???;
+	GridSize.x = 50;
 	GridSize.y = 1;
 	GridSize.z = 1;
 }
@@ -62,7 +62,7 @@ void CleanUp()
 //It adds vectors A and B then stores result in vector C
 __global__ void AdditionGPU(float *a, float *b, float *c, int n)
 {
-	int id = ???
+	int id = threadIdx.x + blockDim.x*blockIdx.x;
 	
 	if(id < N)
 	{
