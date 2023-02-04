@@ -62,7 +62,23 @@ void CleanUp()
 //It adds vectors A and B then stores result in vector C
 __global__ void AdditionGPU(float *a, float *b, float *c, int n)
 {
-	???
+	int i = threadIdx.x + blockDim.x*blockIdx.x;
+	if(i < N)
+	{
+	c[i] = a[i] + b[i];
+	}
+}
+
+void errorCheck(const char *message)
+{
+	cudaError_t  error;
+	error = cudaGetLastError();
+
+	if(error != cudaSuccess)
+	{
+		printf("\n CUDA ERROR: %s = %s\n", message, cudaGetErrorString(error));
+		exit(0);
+	}
 }
 
 int main()
@@ -84,13 +100,21 @@ int main()
 
 	//Copy Memory from CPU to GPU		
 	cudaMemcpyAsync(A_GPU, A_CPU, N*sizeof(float), cudaMemcpyHostToDevice);
+	//error checking
+	errorCheck(__FILE__, __LINE__);
 	cudaMemcpyAsync(B_GPU, B_CPU, N*sizeof(float), cudaMemcpyHostToDevice);
-	
+	//error checking
+	errorCheck(__FILE__, __LINE__);
+
 	//Calling the Kernel (GPU) function.	
 	AdditionGPU<<<GridSize,BlockSize>>>(A_GPU, B_GPU, C_GPU, N);
-	
+	//error checking
+	errorCheck(__FILE__, __LINE__);
+
 	//Copy Memory from GPU to CPU	
 	cudaMemcpyAsync(C_CPU, C_GPU, N*sizeof(float), cudaMemcpyDeviceToHost);
+	//error checking
+	errorCheck(__FILE__, __LINE__);
 
 	//Stopping the timer
 	gettimeofday(&end, NULL);
