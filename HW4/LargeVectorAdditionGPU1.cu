@@ -62,21 +62,25 @@ void CleanUp()
 //It adds vectors A and B then stores result in vector C
 __global__ void AdditionGPU(float *a, float *b, float *c, int n)
 {
-	int i = threadIdx.x + blockDim.x*blockIdx.x;
-	if(i < N)
+	int i;
+	for(int j = 0; j<N/(blockDim.x*gridDim.x)+1; j++)
 	{
-	c[i] = a[i] + b[i];
+		i = threadIdx.x + blockIdx.x*blockDim.x + j*blockDim.x*gridDim.x;
+		if(i<N)
+		{
+			c[i] = a[i] + b[i];
+		}
 	}
 }
 
-void errorCheck(const char *message)
+void errorCheck(const char *file, int line)
 {
 	cudaError_t  error;
 	error = cudaGetLastError();
 
 	if(error != cudaSuccess)
 	{
-		printf("\n CUDA ERROR: %s = %s\n", message, cudaGetErrorString(error));
+		printf("\n CUDA ERROR: %s = %s\n", cudaGetErrorString(error), file, line);
 		exit(0);
 	}
 }
