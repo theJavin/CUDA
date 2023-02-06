@@ -44,7 +44,7 @@ void Innitialize()
 {
 	int i;
 	
-	for(i = 0; i < N; i++)
+	for(i = 0; i < N+1; i++)
 	{		
 		A_CPU[i] = (float)2*i;	
 		B_CPU[i] = (float)i;
@@ -60,6 +60,7 @@ void CleanUp()
 
 //This is the kernel. It is the function that will run on the GPU.
 //It adds vectors A and B then stores result in vector C
+
 __global__ void AdditionGPU(float *a, float *b, float *c, int n)
 {
 	int i;
@@ -72,6 +73,7 @@ __global__ void AdditionGPU(float *a, float *b, float *c, int n)
 		}
 	}
 }
+
 
 void errorCheck(const char *file, int line)
 {
