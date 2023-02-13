@@ -38,7 +38,6 @@ void SetUpCudaDevices()
 	GridSize.z = 1;
 }
 
-
 __device__ float color (float x, float y) 
 {
 	float mag,maxMag,temp;
@@ -68,7 +67,7 @@ __device__ float color (float x, float y)
 	}
 }
 
-__global__ void display(void) 
+void display(void) 
 { 
 	float *pixels; 
 	float x, y;
