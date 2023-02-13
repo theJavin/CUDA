@@ -1,4 +1,4 @@
-
+//#include "../cudaError.h"
 void errorCheck(const char *file, int line)
 {
 	cudaError_t  error;

@@ -3,7 +3,7 @@
 
 #include <sys/time.h>
 #include <stdio.h>
-#include "cudaError.h"
+#include "../cudaError.h"
 
 //Length of vectors to be added.
 #define N 217 // ** Don't change this
@@ -65,7 +65,7 @@ void CleanUp()
 __global__ void AdditionGPU(float *a, float *b, float *c, int n)
 {
 	int i;
-	int jump = blockDim.x*gridDim.x
+	int jump = blockDim.x*gridDim.x;
 	for(int j = 0; j<N/jump+1; j++)
 	{
 		i = threadIdx.x + blockIdx.x*blockDim.x + j*jump;

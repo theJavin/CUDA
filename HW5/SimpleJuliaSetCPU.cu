@@ -1,6 +1,6 @@
 //nvcc SimpleJuliaSetCPU.cu -o SimpleJuliaSetCPU -lglut -lGL -lm
 // This is a simple Julia set which is repeated iterations of 
-// Znew = Zold + C whre Z and Care imaginary numbers.
+// Znew = Zold + C where Z and Care imaginary numbers.
 // After so many tries if Zinitial escapes color it black if it stays around color it red.
 
 #include <GL/glut.h>
@@ -83,6 +83,7 @@ void display(void)
 
 int main(int argc, char** argv)
 { 
+
    	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGB | GLUT_SINGLE);
    	glutInitWindowSize(window_width, window_height);

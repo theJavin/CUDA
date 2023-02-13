@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
+#include "../cudaError.h"
 
 
 #define A  -0.824  //real
@@ -15,6 +16,8 @@
 
 unsigned int window_width = 1024;
 unsigned int window_height = 1024;
+
+#define N window_height*window_width
 
 dim3 BlockSize; //This variable will hold the Dimensions of your block
 dim3 GridSize; //This variable will hold the Dimensions of your grid
@@ -38,7 +41,7 @@ float yMax =  2.0;
 float stepSizeX = (xMax - xMin)/((float)window_width);
 float stepSizeY = (yMax - yMin)/((float)window_height);
 
-__global__ void color(float x, float y) 
+__global__ void compute(float pixels, float x, float y) 
 {
 	float mag,maxMag,temp;
 	float maxCount = 200;
@@ -65,10 +68,8 @@ __global__ void color(float x, float y)
 	{
 		return(1.0);
 	}
-}
 
-void display(void) 
-{ 
+
 	float *pixels; 
 	float x, y;
 	int k;
@@ -82,7 +83,7 @@ void display(void)
 		x = xMin;
 		while(x < xMax) 
 		{
-			pixels[k] = <<<GridSize, BlockSize>>>color(x,y);	//Red on or off returned from color
+			pixels[k] = color(x,y);	//Red on or off returned from color
 			pixels[k+1] = 0.0; 	//Green off
 			pixels[k+2] = 0.0;	//Blue off
 			k=k+3;			//Skip to next pixel
@@ -95,13 +96,25 @@ void display(void)
 	glFlush(); 
 }
 
+
 int main(int argc, char** argv)
 { 
 	SetUpCudaDevices();
+	float *pixels, *pixelsGPU; 
+	float *x, *y, *xGPU, *yGPU;
+
+	pixels = (float*)malloc(N*3*sizeof(float));
+	x = (float*)malloc(window_width*sizeof(float));
+	y = (float*)malloc(window_width*sizeof(float));
+
+	cudaMalloc(&pixelsGPU, N*3*sizeof(float));
+	cudaMalloc(&xGPU, window_width*sizeof(float));
+	cudaMalloc(&yGPU, window_width*sizeof(float));
+
    	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGB | GLUT_SINGLE);
    	glutInitWindowSize(window_width, window_height);
 	glutCreateWindow("Fractals man, fractals.");
-   	glutDisplayFunc(display);
+   	glutDisplayFunc(compute<<<GridSize, BlockSize>>>(*pixelsGPU, *xGPU, *yGPU));
    	glutMainLoop();
 }
