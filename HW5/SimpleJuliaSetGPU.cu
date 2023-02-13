@@ -19,7 +19,7 @@ void Init();
 unsigned int window_width = 1024;
 unsigned int window_height = 1024;
 
-#define N window_height*window_width
+int N = window_height*window_width;
 
 dim3 BlockSize; //This variable will hold the Dimensions of your block
 dim3 GridSize; //This variable will hold the Dimensions of your grid
@@ -45,38 +45,41 @@ float yMax =  2.0;
 float stepSizeX = (xMax - xMin)/((float)window_width);
 float stepSizeY = (yMax - yMin)/((float)window_height);
 
-__global__ void compute(float *pixels, float stepSizeX, float stepSizeY, float xMin, float yMin) 
+__global__ void compute(float *pixels, float stepSizeX, float stepSizeY, float xMin, float yMin, int N) 
 {
 	int id = 3*(threadIdx.x + blockDim.x*blockIdx.x); 
 	float mag = 0.0;
 	float maxmag = 10.0;
 	float temp;
 	int count = 0;
-	int maxCount = 200;
+	int maxCount = 1000;
 
 	float x = xMin + stepSizeX*threadIdx.x;
 	float y = yMin + stepSizeY*blockIdx.x;
 
-	while(count < maxCount)
+	if(id<3*N)
 	{
-		temp = x;
-		x = x*x-y*y + A;
-		y = (2.0*temp*y) + B;
-		
-		mag += sqrt(x*x + y*y);
-		count++;
-	}
-	if(mag > maxmag)
-	{
-		pixels[id] = 1.0;
-		pixels[id+1] = 0.0;
-		pixels[id+2] = 0.0;
-	}
-	else
-	{
-		pixels[id] = 0.0;
-		pixels[id+1] = 0.0;
-		pixels[id+2] = 0.0;
+		while(count < maxCount)
+		{
+			temp = x;
+			x = x*x-y*y + A;
+			y = (2.0*temp*y) + B;
+			
+			mag += sqrt(x*x + y*y);
+			count++;
+		}
+		if(mag > maxmag)
+		{
+			pixels[id] = 1.0;
+			pixels[id+1] = 0.0;
+			pixels[id+2] = 0.0;
+		}
+		else
+		{
+			pixels[id] = 0.0;
+			pixels[id+1] = 0.0;
+			pixels[id+2] = 0.0;
+		}
 	}
 }
 
@@ -86,7 +89,7 @@ void Display()
 	errorCheck(__FILE__, __LINE__);
 	cudaMemcpyAsync(pixelsGPU, pixels, N*3*sizeof(float), cudaMemcpyHostToDevice);
 	errorCheck(__FILE__, __LINE__);
-	compute<<<GridSize, BlockSize>>>(pixelsGPU, stepSizeX, stepSizeY, xMin, yMin);
+	compute<<<GridSize, BlockSize>>>(pixelsGPU, stepSizeX, stepSizeY, xMin, yMin, N);
 	errorCheck(__FILE__, __LINE__);
 	cudaMemcpyAsync(pixels, pixelsGPU, N*3*sizeof(float), cudaMemcpyDeviceToHost);
 	errorCheck(__FILE__, __LINE__);
