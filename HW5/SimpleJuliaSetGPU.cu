@@ -16,6 +16,20 @@
 unsigned int window_width = 1024;
 unsigned int window_height = 1024;
 
+dim3 BlockSize; //This variable will hold the Dimensions of your block
+dim3 GridSize; //This variable will hold the Dimensions of your grid
+
+void SetUpCudaDevices()
+{
+	BlockSize.x = 1024;
+	BlockSize.y = 1;
+	BlockSize.z = 1;
+	
+	GridSize.x = 1024;
+	GridSize.y = 1;
+	GridSize.z = 1;
+}
+
 float xMin = -2.0;
 float xMax =  2.0;
 float yMin = -2.0;
@@ -24,7 +38,7 @@ float yMax =  2.0;
 float stepSizeX = (xMax - xMin)/((float)window_width);
 float stepSizeY = (yMax - yMin)/((float)window_height);
 
-float color (float x, float y) 
+__global__ void color(float x, float y) 
 {
 	float mag,maxMag,temp;
 	float maxCount = 200;
@@ -68,7 +82,7 @@ void display(void)
 		x = xMin;
 		while(x < xMax) 
 		{
-			pixels[k] = color(x,y);	//Red on or off returned from color
+			pixels[k] = <<<GridSize, BlockSize>>>color(x,y);	//Red on or off returned from color
 			pixels[k+1] = 0.0; 	//Green off
 			pixels[k+2] = 0.0;	//Blue off
 			k=k+3;			//Skip to next pixel
@@ -83,6 +97,7 @@ void display(void)
 
 int main(int argc, char** argv)
 { 
+	SetUpCudaDevices();
    	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGB | GLUT_SINGLE);
    	glutInitWindowSize(window_width, window_height);
