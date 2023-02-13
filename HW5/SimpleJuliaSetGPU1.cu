@@ -1,6 +1,6 @@
 //nvcc SimpleJuliaSetCPU.cu -o SimpleJuliaSetCPU -lglut -lGL -lm
 // This is a simple Julia set which is repeated iterations of 
-// Znew = Zold + C whre Z and Care imaginary numbers.
+// Znew = Zold + C where Z and Care imaginary numbers.
 // After so many tries if Zinitial escapes color it black if it stays around color it red.
 
 #include <GL/glut.h>
@@ -8,7 +8,6 @@
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
-#include "../cudaError.h"
 
 
 #define A  -0.824  //real
@@ -17,7 +16,13 @@
 unsigned int window_width = 1024;
 unsigned int window_height = 1024;
 
-#define N window_height*window_width
+float xMin = -2.0;
+float xMax =  2.0;
+float yMin = -2.0;
+float yMax =  2.0;
+
+float stepSizeX = (xMax - xMin)/((float)window_width);
+float stepSizeY = (yMax - yMin)/((float)window_height);
 
 dim3 BlockSize; //This variable will hold the Dimensions of your block
 dim3 GridSize; //This variable will hold the Dimensions of your grid
@@ -33,19 +38,10 @@ void SetUpCudaDevices()
 	GridSize.z = 1;
 }
 
-float xMin = -2.0;
-float xMax =  2.0;
-float yMin = -2.0;
-float yMax =  2.0;
 
-float stepSizeX = (xMax - xMin)/((float)window_width);
-float stepSizeY = (yMax - yMin)/((float)window_height);
-
-__global__ void compute(float pixels*, float x*, float y*) 
+__device__ float color (float x, float y) 
 {
-	int id = threadIdx.x + blockDim.x*blockIdx.x;
-	float mag,maxMag;
-	float temp[sizeof(x)];
+	float mag,maxMag,temp;
 	float maxCount = 200;
 	float count = 0;
 	maxMag = 10;
@@ -56,8 +52,8 @@ __global__ void compute(float pixels*, float x*, float y*)
 		// Zn = Zo*Zo + C
 		// or xn + yni = (xo + yoi)*(xo + yoi) + A + Bi
 		// xn = xo*xo - yo*yo + A (real Part) and yn = 2*xo*yo + B (imagenary part)
-		temp[id] = x[id]; // We will be changing the x but we need its old value to hind y.	
-		x[id] = x[id]*x[id] - y[id]*y[id] + A;
+		temp = x; // We will be changing the x but weneed its old value to hind y.	
+		x = x*x - y*y + A;
 		y = (2.0 * temp * y) + B;
 		mag = sqrt(x*x + y*y);
 		count++;
@@ -70,12 +66,15 @@ __global__ void compute(float pixels*, float x*, float y*)
 	{
 		return(1.0);
 	}
+}
 
-
+__global__ void display(void) 
+{ 
 	float *pixels; 
 	float x, y;
 	int k;
 
+	pixels = (float *)malloc(window_width*window_height*3*sizeof(float));
 	k=0;
 
 	y = yMin;
@@ -93,43 +92,17 @@ __global__ void compute(float pixels*, float x*, float y*)
 		y += stepSizeY;
 	}
 
-	glDrawPixels(window_width, window_height, GL_RGB, GL_FLOAT, *pixels[id]); 
+	glDrawPixels(window_width, window_height, GL_RGB, GL_FLOAT, pixels); 
 	glFlush(); 
-}
-
-void CleanUp()
-{
-	
 }
 
 int main(int argc, char** argv)
 { 
-	SetUpCudaDevices();
-	float *pixels, *pixelsGPU; 
-	float *x, *y, *xGPU, *yGPU;
-
-	pixels = (float*)malloc(N*3*sizeof(float));
-	x = (float*)malloc(window_width*sizeof(float));
-	y = (float*)malloc(window_width*sizeof(float));
-
-	cudaMalloc(&pixelsGPU, N*3*sizeof(float));
-	cudaMalloc(&xGPU, window_width*sizeof(float));
-	cudaMalloc(&yGPU, window_width*sizeof(float));
 
    	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGB | GLUT_SINGLE);
    	glutInitWindowSize(window_width, window_height);
 	glutCreateWindow("Fractals man, fractals.");
-	
-	cudaMemcpyAsync(pixelsGPU, pixels, N*3*sizeof(float), cudaMemcpyHostToDevice);
-	cudaMemcpyAsync(xGPU, x, window_width*sizeof(float), cudaMemcpyHostToDevice);
-	cudaMemcpyAsync(yGPU, y, window_width*sizeof(float), cudaMemcpyHostToDevice);
-	errorCheck(__FILE__, __LINE__);
-   	glutDisplayFunc(compute<<<GridSize, BlockSize>>>(*pixelsGPU, *xGPU, *yGPU));
-	errorCheck(__FILE__, __LINE__);
-	cudaMemcpyAsync(pixels, pixelsGPU, N*3*sizeof(float), cudaMemcpyDeviceToHost);
-	
-	CleanUp()
-
+   	glutDisplayFunc(display);
    	glutMainLoop();
 }
