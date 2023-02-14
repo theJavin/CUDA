@@ -12,7 +12,6 @@
 
 void Init();
 
-
 #define A  -0.824  //real
 #define B  -0.1711   //imaginary
 
