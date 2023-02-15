@@ -82,7 +82,7 @@ __global__ void DotProductGPU(float *a, float *b, float *c, int n)
     {
 		if(id == 0)
 		{
-        	c[0] = c[0] + c[nnew-1];
+        	c[id] = c[id] + c[nnew-1];
 		}
 		nnew--;
     }
