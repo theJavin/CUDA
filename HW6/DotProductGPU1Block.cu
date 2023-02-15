@@ -76,18 +76,23 @@ __global__ void DotProductGPU(float *a, float *b, float *c, int n)
     __syncthreads();
     
     int nnew = n;
-    while(nnew >= 1)
+    while(nnew > 1)
     {
-        if(n%2 == 1)
+        if(nnew%2 == 1)
     {
-        c[0] = c[0] + c[nnew-1];
+		if(id == 0)
+		{
+        	c[0] = c[0] + c[nnew-1];
+		}
+		nnew--;
     }
-        if(id < (nnew/2)+1)
+		__syncthreads();
+        if(id < (nnew/2))
         {
             c[id] = c[id]+c[id+nnew/2];
         }
-        __syncthreads();
         nnew = nnew/2;
+		__syncthreads();
     }
     
 
