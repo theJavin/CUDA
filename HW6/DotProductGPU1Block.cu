@@ -96,8 +96,7 @@ __global__ void DotProductGPU(float *a, float *b, float *c, int n)
 
 int main()
 {
-	float *dot;
-    dot = (float*)malloc(sizeof(float));
+	float dot;
 
 	timeval start, end;
 	
@@ -124,7 +123,7 @@ int main()
 	errorCheck(__FILE__, __LINE__);
 	
 	//Copy Memory from GPU to CPU	
-	cudaMemcpyAsync(dot, &C_GPU[0], sizeof(float), cudaMemcpyDeviceToHost);
+	cudaMemcpyAsync(&dot, &C_GPU[0], sizeof(float), cudaMemcpyDeviceToHost);
 	errorCheck(__FILE__, __LINE__);
 
 	//Stopping the timer
