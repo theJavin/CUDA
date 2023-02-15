@@ -72,7 +72,7 @@ __global__ void DotProductGPU(float *a, float *b, float *c, int n)
 	int id = threadIdx.x;
 	//*************************************************
 
-    a[id] = a[id]*b[id];
+    c[id] = a[id]*b[id];
     __syncthreads();
     
     int nnew = n;
@@ -84,7 +84,7 @@ __global__ void DotProductGPU(float *a, float *b, float *c, int n)
     }
         if(id < (nnew/2)+1)
         {
-            c[id] = a[id]+a[id+nnew/2];
+            c[id] = c[id]+c[id+nnew/2];
         }
         __syncthreads();
         nnew = nnew/2;
