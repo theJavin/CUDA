@@ -95,7 +95,7 @@ __device__ float getEscapeValue(float x, float y, float a, float b)
 		
 		//We will be changing the x but we need its old value to find y.	
 		tempX = x; 
-		x = x*x - y*y + a;
+		x = sin(x*x) - sin(y*y) + a;
 		y = (2.0 * tempX * y) + b;
 		mag = sqrt(x*x + y*y);
 		count++;
