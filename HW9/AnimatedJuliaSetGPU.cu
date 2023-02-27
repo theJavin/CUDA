@@ -23,9 +23,10 @@ dim3 BlockSize, GridSize;
 float *PixelsCPU, *PixelsGPU; 
 float StepSizeX, StepSizeY;
 
-float RealSeed = -0.824;
-float ImaginarySeed = -0.1711;
+float RealSeed = -0.324;
+float ImaginarySeed = 0.2454;
 float DeltaSeed = 0.01;
+float DeltaSeed2 = 0.01;
 
 // prototyping functions
 void Display();
@@ -143,12 +144,36 @@ void makeFractal()
 
 void adjustSeed()
 {
+	/*
 	float temp;
 	
-	temp = ((float)rand()/(float)RAND_MAX)*2.0 - 1.0; // Get random number between -1 at 1.
+	temp = tan(((float)rand()/(float)RAND_MAX)*2.0 - 1.0);
 	RealSeed += DeltaSeed*temp;
-	temp = ((float)rand()/(float)RAND_MAX)*2.0 - 1.0; // Get random number between -1 at 1.
+	temp = tan(((float)rand()/(float)RAND_MAX)*2.0 - 1.0);
 	ImaginarySeed += DeltaSeed*temp;
+	*/
+
+	int bound = 2;
+	RealSeed += DeltaSeed;
+	ImaginarySeed += DeltaSeed2;
+	if(RealSeed >= bound)
+	{
+		DeltaSeed = -1*DeltaSeed;
+	}
+	else if(RealSeed < -bound)
+	{
+		DeltaSeed = -1*DeltaSeed;
+	}
+
+	if(ImaginarySeed >= bound)
+	{
+		DeltaSeed2 = -1*DeltaSeed2;
+	}
+	else if(ImaginarySeed < -bound)
+	{
+		DeltaSeed2 = -1*DeltaSeed2;
+	}
+
 }
 
 void paintScreen()
@@ -196,7 +221,7 @@ int main(int argc, char** argv)
    	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGB | GLUT_SINGLE);
    	glutInitWindowSize(WindowWidth, WindowHeight);
-	Window = glutCreateWindow("Fractals man, fractals");
+	Window = glutCreateWindow("~~~fractals man~~~");
 	glutKeyboardFunc(KeyPressed);
    	glutDisplayFunc(display);
 	//glutReshapeFunc(reshape);
