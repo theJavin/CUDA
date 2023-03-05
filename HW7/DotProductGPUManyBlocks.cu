@@ -82,34 +82,35 @@ __global__ void DotProductGPU(float *a, float *b, float *c, int n)
 	
 	//********************************************
 
-	if(vectorNumber < n)
+	while(vectorNumber < N)
 	{	
-		c[vectorNumber] += a[vectorNumber]*b[vectorNumber];
+		c[vectorNumber] = a[vectorNumber]*b[vectorNumber];
+		vectorNumber += blockDim.x*gridDim.x;
 	}
+	//sync threads and blocks
 
 	__syncthreads();
-	
 
-	int nnew = blockDim.x;
-	while(nnew > 1)
-	{
-		if(nnew%2 == 1)
+	block.sync();
+
+	int nnew = n;
+    while(nnew > 1)
+    {
+        if(nnew%2 == 1)
+    {
+		if(threadNumber == 0)
 		{
-			if(vectorNumber == blockDim.x*blockIdx.x)
-			{
-				c[blockDim.x*blockIdx.x] += c[blockDim.x*blockIdx.x+nnew-1];
-			}
-			nnew--;
+        	c[threadNumber] += c[nnew-1];
 		}
-		if(threadNumber < nnew/2 && (vectorNumber + nnew/2)<n)
-		{
-			c[vectorNumber] += c[vectorNumber+nnew/2];
-		}
-		
-		nnew /= 2;
+		nnew--;
+    }
+        if(threadNumber < (nnew/2))
+        {
+            c[threadNumber] += c[threadNumber+nnew/2];
+        }
+        nnew = nnew/2;
 		__syncthreads();
-	}
-
+    }
 
 	//********************************************
 }
