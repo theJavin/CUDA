@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
-#include "./MyCuda.h"
+#include "../cudaError.h"
 
 #define WINDOWWIDTH 1024
 #define WINDOWHEIGHT 1024
