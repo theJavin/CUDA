@@ -17,6 +17,7 @@
 #define ZMAX 1.0f
 
 #define NUMSPHERES 20
+#define INF 1000000
 
 struct sphereStruct 
 {
@@ -29,9 +30,12 @@ static int Window;
 unsigned int WindowWidth = WINDOWWIDTH;
 unsigned int WindowHeight = WINDOWHEIGHT;
 
+cudaEvent_t Start, Stop;
+
 dim3 BlockSize, GridSize;
 float *PixelsCPU, *PixelsGPU; 
-sphereStruct *SpheresCPU, *SpheresGPU;
+sphereStruct *SpheresCPU/*, *SpheresGPU*/;
+__constant__ sphereStruct SpheresGPU[NUMSPHERES];
 
 // prototyping functions
 void Display();
@@ -59,28 +63,27 @@ void KeyPressed(unsigned char key, int x, int y)
 	}
 }
 
-__device__ float hit(float pixelx, float pixely, float *dimingValue, sphereStruct sphere)
+__device__ float hit(float pixx, float pixy, float *dimingValue, sphereStruct sphere /*float centerx, float centery, float centerz, float radius*/)
 {
-	float dx = pixelx - sphere.x;  //Distance from ray to sphere center in x direction
-	float dy = pixely - sphere.y;  //Distance from ray to sphere center in y direction
-	float r2 = sphere.radius*sphere.radius;
-	if(dx*dx + dy*dy < r2) // if the ray hits the sphere, then we need to find distance
+	float dx = pixx - sphere.x;  //Distance from ray to sphere center in x direction
+	float dy = pixy - sphere.y;  //Distance from ray to sphere center in y direction
+	if(dx*dx + dy*dy < sphere.radius*sphere.radius) // if the ray hits the sphere, then we need to find distance
 	{
-		float dz = sqrtf(r2 - dx*dx - dy*dy); // Distance from ray to edge of sphere?
+		float dz = sqrtf(sphere.radius*sphere.radius - dx*dx - dy*dy); // Distance from ray to edge of sphere?
 		*dimingValue = dz/sphere.radius; // n is value between 0 and 1 used for darkening points near edge.
 		return dz + sphere.z; //  Return the distance to be scaled by
 	}
 	return (ZMIN- 1.0); //If the ray doesn't hit anything return a number behind the box.
 }
 
-__global__ void makeSphersBitMap(float *pixels, sphereStruct *sphereInfo)
+__global__ void makeSphersBitMap(float *pixels /*, sphereStruct *sphereInfo*/)
 {
 	float stepSizeX = (XMAX - XMIN)/((float)WINDOWWIDTH - 1);
 	float stepSizeY = (YMAX - YMIN)/((float)WINDOWHEIGHT - 1);
 	
 	// Asigning each thread a pixel
-	float pixelx = XMIN + threadIdx.x*stepSizeX;
-	float pixely = YMIN + blockIdx.x*stepSizeY;
+	float picx = XMIN + threadIdx.x*stepSizeX;
+	float picy = YMIN + blockIdx.x*stepSizeY;
 	
 	// Finding this pixels location in memory
 	int id = 3*(threadIdx.x + blockIdx.x*blockDim.x);
@@ -94,15 +97,14 @@ __global__ void makeSphersBitMap(float *pixels, sphereStruct *sphereInfo)
 	float maxHit = ZMIN -1.0f; // Initializing it to be out of the back of the box.
 	for(int i = 0; i < NUMSPHERES; i++)
 	{
-		//hitValue = hit(pixelx, pixely, &dimingValue, sphereInfo[i].x, sphereInfo[i].y, sphereInfo[i].z, sphereInfo[i].radius); 
-		hitValue = hit(pixelx, pixely, &dimingValue, sphereInfo[i]);
+		hitValue = hit(picx, picy, &dimingValue, SpheresGPU[i] /*sphereInfo[i].x, sphereInfo[i].y, sphereInfo[i].z, sphereInfo[i].radius*/); 
 		// do we hit any spheres? If so, how close are we to the center? (i.e. n)
 		if(maxHit < hitValue)
 		{
 			// Setting the RGB value of the sphere but also diming it as it gets close to the side of the sphere.
-			pixelr = sphereInfo[i].r * dimingValue; 	
-			pixelg = sphereInfo[i].g * dimingValue;	
-			pixelb = sphereInfo[i].b * dimingValue; 	
+			pixelr = SpheresGPU[i].r * dimingValue; 	
+			pixelg = SpheresGPU[i].g * dimingValue;	
+			pixelb = SpheresGPU[i].b * dimingValue; 	
 			maxHit = hitValue; // reset maxHit value to be the current closest sphere
 		}
 	}
@@ -132,10 +134,11 @@ void makeRandomSpheres()
 
 void makeBitMap()
 {
-	cudaMemcpy(SpheresGPU, SpheresCPU, NUMSPHERES*sizeof(sphereStruct), cudaMemcpyHostToDevice);
+	//cudaMemcpy(SpheresGPU, SpheresCPU, NUMSPHERES*sizeof(sphereStruct), cudaMemcpyHostToDevice);
+	cudaMemcpyToSymbolAsync(SpheresGPU, SpheresCPU, NUMSPHERES*sizeof(sphereStruct));
 	myCudaErrorCheck(__FILE__, __LINE__);
 	
-	makeSphersBitMap<<<GridSize, BlockSize>>>(PixelsGPU, SpheresGPU);
+	makeSphersBitMap<<<GridSize, BlockSize>>>(PixelsGPU/*, SpheresGPU*/);
 	myCudaErrorCheck(__FILE__, __LINE__);
 	
 	cudaMemcpyAsync(PixelsCPU, PixelsGPU, WINDOWWIDTH*WINDOWHEIGHT*3*sizeof(float), cudaMemcpyDeviceToHost);
@@ -159,7 +162,7 @@ void setup()
 	myCudaErrorCheck(__FILE__, __LINE__);
 	
 	SpheresCPU= (sphereStruct*)malloc(NUMSPHERES*sizeof(sphereStruct));
-	cudaMalloc(&SpheresGPU, NUMSPHERES*sizeof(sphereStruct));
+	//cudaMalloc(&SpheresGPU, NUMSPHERES*sizeof(sphereStruct));
 	myCudaErrorCheck(__FILE__, __LINE__);
 	
 	//Threads in a block
@@ -186,12 +189,21 @@ void setup()
 
 int main(int argc, char** argv)
 { 
+	cudaEventCreate(&Start);
+	myCudaErrorCheck(__FILE__, __LINE__);
+	
+	cudaEventCreate(&Stop);
+	myCudaErrorCheck(__FILE__, __LINE__);
+	
+	cudaEventRecord(Start, 0);
+	myCudaErrorCheck(__FILE__, __LINE__);
+
 	setup();
 	makeRandomSpheres();
    	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGB | GLUT_SINGLE);
    	glutInitWindowSize(WINDOWWIDTH, WINDOWHEIGHT);
-	Window = glutCreateWindow("Random Spheres");
+	Window = glutCreateWindow("mmmm.... balls");
 	glutKeyboardFunc(KeyPressed);
    	glutDisplayFunc(display);
 	//glutReshapeFunc(reshape);

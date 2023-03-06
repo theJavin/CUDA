@@ -190,7 +190,7 @@ int main(int argc, char** argv)
    	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGB | GLUT_SINGLE);
    	glutInitWindowSize(WINDOWWIDTH, WINDOWHEIGHT);
-	Window = glutCreateWindow("Random Spheres");
+	Window = glutCreateWindow("mmmm.... Balls");
 	glutKeyboardFunc(KeyPressed);
    	glutDisplayFunc(display);
 	//glutReshapeFunc(reshape);
