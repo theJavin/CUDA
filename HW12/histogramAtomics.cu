@@ -1,8 +1,8 @@
-// nvcc histogramAtomics.cu -o temp
+// nvcc histogramAtomics.cu -o histogramAtomics
 
 #include <sys/time.h>
 #include <stdio.h>
-#include "./MyCuda.h"
+#include "../cudaError.h"
 
 //Max int value is 2,147,483,647       2147483
 //Chat said that the length of the sequence of random number that srand generates in 2^32
@@ -149,10 +149,21 @@ __global__ void fillHistogramGPU(float *randomNumbers, int *hist)
 	int id = threadIdx.x + blockIdx.x*blockDim.x;
 	
 	//****************************************
-	// Follow the model set in the CPU code and do a histogram with atomic adds to shared memory 
-	// then atomic adds to glogal memory. Because we set the number of blocks to be a multiple of the 
-	// the number of multiprocessors there may not be enough to threads to finish the job. Soo you will
-	// have to "jump" through the random numbers in blockDim.x*gridDim.x strides.
+
+    while(id < NUMBER_OF_RANDOM_NUMBERS)    
+    {
+        if(randomNumbers[id] >= 10)
+        {
+            i = int(randomNumbers[id]) % 10;
+            atomicAdd(&hist[i], 1);
+        }
+        else
+        {
+            atomicAdd(&hist[0], 1);
+        }
+        id += jump;
+    }
+
 	//****************************************
 }
 
