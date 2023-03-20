@@ -153,7 +153,7 @@ __global__ void fillHistogramGPU(float *randomNumbers, int *hist)
 
     while(id < NUMBER_OF_RANDOM_NUMBERS)    
     {
-	    i = int(randomNumbers[id])/10;
+	    i = int(randomNumbers[id])/NUMBER_OF_BINS;
 		atomicAdd(&hist[i], 1);      
         id += jump;
     }
