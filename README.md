@@ -1,5 +1,5 @@
 # CUDA
 
-Bad vibes to code theifs
+Bad vibes to code thieves
 
 
