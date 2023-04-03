@@ -181,6 +181,8 @@ int main()
 	for(int i = 0; i < ENTIRE_DATA_SET; i += DATA_CHUNKS*3)
 	{
 		//******************************************
+
+		/*
 		cudaMemcpyAsync(A0_GPU, A_CPU + i, DATA_CHUNKS*sizeof(float), cudaMemcpyHostToDevice, Stream0);
         myCudaErrorCheck(__FILE__, __LINE__);
         cudaMemcpyAsync(B0_GPU, B_CPU + i, DATA_CHUNKS*sizeof(float), cudaMemcpyHostToDevice, Stream0);
@@ -204,6 +206,35 @@ int main()
         trigAdditionGPU<<<GridSize, BlockSize, 0, Stream2>>>(A2_GPU, B2_GPU, C2_GPU, DATA_CHUNKS);
         cudaMemcpyAsync(C_CPU + i + 2*DATA_CHUNKS, C2_GPU, DATA_CHUNKS*sizeof(float), cudaMemcpyDeviceToHost, Stream2);
         myCudaErrorCheck(__FILE__, __LINE__);
+		*/
+
+		cudaMemcpyAsync(A0_GPU, A_CPU + i, DATA_CHUNKS*sizeof(float), cudaMemcpyHostToDevice, Stream0);
+        myCudaErrorCheck(__FILE__, __LINE__);
+		cudaMemcpyAsync(A1_GPU, A_CPU + i + DATA_CHUNKS, DATA_CHUNKS*sizeof(float), cudaMemcpyHostToDevice, Stream1);
+        myCudaErrorCheck(__FILE__, __LINE__);
+		cudaMemcpyAsync(A2_GPU, A_CPU + i + 2*DATA_CHUNKS, DATA_CHUNKS*sizeof(float), cudaMemcpyHostToDevice, Stream2);
+        myCudaErrorCheck(__FILE__, __LINE__);
+
+        cudaMemcpyAsync(B0_GPU, B_CPU + i, DATA_CHUNKS*sizeof(float), cudaMemcpyHostToDevice, Stream0);
+        myCudaErrorCheck(__FILE__, __LINE__);
+		cudaMemcpyAsync(B1_GPU, B_CPU + i + DATA_CHUNKS, DATA_CHUNKS*sizeof(float), cudaMemcpyHostToDevice, Stream1);
+        myCudaErrorCheck(__FILE__, __LINE__);
+		cudaMemcpyAsync(B2_GPU, B_CPU + i + 2*DATA_CHUNKS, DATA_CHUNKS*sizeof(float), cudaMemcpyHostToDevice, Stream2);
+        myCudaErrorCheck(__FILE__, __LINE__);
+
+        trigAdditionGPU<<<GridSize, BlockSize, 0, Stream0>>>(A0_GPU, B0_GPU, C0_GPU, DATA_CHUNKS);
+        trigAdditionGPU<<<GridSize, BlockSize, 0, Stream1>>>(A1_GPU, B1_GPU, C1_GPU, DATA_CHUNKS);
+        trigAdditionGPU<<<GridSize, BlockSize, 0, Stream2>>>(A2_GPU, B2_GPU, C2_GPU, DATA_CHUNKS);
+
+        cudaMemcpyAsync(C_CPU + i, C0_GPU, DATA_CHUNKS*sizeof(float), cudaMemcpyDeviceToHost, Stream0);
+        myCudaErrorCheck(__FILE__, __LINE__);
+        cudaMemcpyAsync(C_CPU + i + DATA_CHUNKS, C1_GPU, DATA_CHUNKS*sizeof(float), cudaMemcpyDeviceToHost, Stream1);
+        myCudaErrorCheck(__FILE__, __LINE__);
+        cudaMemcpyAsync(C_CPU + i + 2*DATA_CHUNKS, C2_GPU, DATA_CHUNKS*sizeof(float), cudaMemcpyDeviceToHost, Stream2);
+        myCudaErrorCheck(__FILE__, __LINE__);	
+
+		
+
 		//******************************************
 	}
 	
