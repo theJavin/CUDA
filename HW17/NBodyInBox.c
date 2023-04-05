@@ -14,7 +14,7 @@
 #define STOP_TIME 10000.0
 #define DT        0.0001
 
-#define GRAVITY 1.0 
+#define GRAVITY 0.1
 
 #define MASS 10.0  	
 #define DIAMETER 1.0
@@ -29,7 +29,7 @@
 #define LENGTH_OF_BOX 6.0
 #define MAX_VELOCITY 5.0
 
-#define NUMBER_OF_BALLS 100
+#define NUMBER_OF_BALLS 120
 
 const float XMax = (LENGTH_OF_BOX/2.0);
 const float YMax = (LENGTH_OF_BOX/2.0);
@@ -41,7 +41,7 @@ const float ZMin = -(LENGTH_OF_BOX/2.0);
 // Globals
 typedef struct spheres
 {
-	float px, py, pz, vx, vy, vz, fx, fy, fz, mass; 
+	float px, py, pz, vx, vy, vz, fx, fy, fz, mass, r, g, b; 
 }spheres;
 
 struct spheres *Spheres;
@@ -190,6 +190,13 @@ void keep_in_box()
 void get_forces()
 {
 	float dx,dy,dz,r,r2,dvx,dvy,dvz,forceMag,inout;
+
+	for(int i = 0; i < NUMBER_OF_BALLS; i++)
+	{
+		Spheres[i].fx = 0;
+		Spheres[i].fy = 0;
+		Spheres[i].fz = 0;
+	}
 	
 	for(int i = 0; i < NUMBER_OF_BALLS; i++)
 	{
@@ -222,9 +229,9 @@ void get_forces()
 					}
 				}
 
-				Spheres[i].fx = forceMag*dx/r;
-				Spheres[i].fy = forceMag*dy/r;
-				Spheres[i].fz = forceMag*dz/r;
+				Spheres[i].fx += forceMag*dx/r;
+				Spheres[i].fy += forceMag*dy/r;
+				Spheres[i].fz += forceMag*dz/r;
 				Spheres[j].fx += -forceMag*dx/r;
 				Spheres[j].fy += -forceMag*dy/r;
 				Spheres[j].fz += -forceMag*dz/r;
