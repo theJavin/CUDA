@@ -160,23 +160,23 @@ void keep_in_box()
 			Spheres[i].vx = - Spheres[i].vx;
 		}
 		
-		if(py1 > halfBoxLength)
+		if(Spheres[i].py > halfBoxLength)
 		{
 			Spheres[i].py = 2.0*halfBoxLength - Spheres[i].py;
 			Spheres[i].vy = - Spheres[i].vy;
 		}
-		else if(py1 < -halfBoxLength)
+		else if(Spheres[i].py < -halfBoxLength)
 		{
 			Spheres[i].py = -2.0*halfBoxLength - Spheres[i].py;
 			Spheres[i].vy = - Spheres[i].vy;
 		}
 				
-		if(pz1 > halfBoxLength)
+		if(Spheres[i].pz > halfBoxLength)
 		{
 			Spheres[i].pz = 2.0*halfBoxLength - Spheres[i].pz;
 			Spheres[i].vz = - Spheres[i].vz;
 		}
-		else if(pz1 < -halfBoxLength)
+		else if(Spheres[i].pz < -halfBoxLength)
 		{
 			Spheres[i].pz = -2.0*halfBoxLength - Spheres[i].pz;
 			Spheres[i].vz = - Spheres[i].vz;
