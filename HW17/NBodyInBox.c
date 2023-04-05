@@ -14,22 +14,22 @@
 #define STOP_TIME 10000.0
 #define DT        0.0001
 
-#define GRAVITY 0.1 
+#define GRAVITY 1.0 
 
 #define MASS 10.0  	
 #define DIAMETER 1.0
 
-#define SPRING_STRENGTH 50.0
+#define SPRING_STRENGTH 50000.0
 #define SPRING_REDUCTION 0.1
 
 #define DAMP 0.0
 
-#define DRAW 10
+#define DRAW 100
 
 #define LENGTH_OF_BOX 6.0
-#define MAX_VELOCITY 50.0
+#define MAX_VELOCITY 5.0
 
-#define NUMBER_OF_BALLS 10
+#define NUMBER_OF_BALLS 100
 
 const float XMax = (LENGTH_OF_BOX/2.0);
 const float YMax = (LENGTH_OF_BOX/2.0);
@@ -191,11 +191,11 @@ void get_forces()
 {
 	float dx,dy,dz,r,r2,dvx,dvy,dvz,forceMag,inout;
 	
-	for(int i = 0; i < NUMBER_OF_BALLS-1; i++)
+	for(int i = 0; i < NUMBER_OF_BALLS; i++)
 	{
 		for(int j = 0; j < NUMBER_OF_BALLS; j++)
 		{
-			if(i!=j)
+			if(j!=i)
 			{	
 				dx = Spheres[j].px - Spheres[i].px;
 				dy = Spheres[j].py - Spheres[i].py;
@@ -204,7 +204,7 @@ void get_forces()
 				r2 = dx*dx + dy*dy + dz*dz;
 				r = sqrt(r2);
 
-				forceMag =  Spheres[i].mass*Spheres[j].mass*GRAVITY/r2;
+				forceMag = Spheres[i].mass*Spheres[j].mass*GRAVITY/r2;
 						
 				if (r < DIAMETER)
 				{
@@ -225,6 +225,9 @@ void get_forces()
 				Spheres[i].fx = forceMag*dx/r;
 				Spheres[i].fy = forceMag*dy/r;
 				Spheres[i].fz = forceMag*dz/r;
+				Spheres[j].fx += -forceMag*dx/r;
+				Spheres[j].fy += -forceMag*dy/r;
+				Spheres[j].fz += -forceMag*dz/r;
 			}
 				
 		}	
