@@ -52,31 +52,29 @@ void set_initial_conditions()
 	srand((unsigned) time(&t));
 	int yeahBuddy;
 	float dx, dy, dz, seperation;
-	
-	Spheres[0].px = (LENGTH_OF_BOX - DIAMETER)*rand()/RAND_MAX - (LENGTH_OF_BOX - DIAMETER)/2.0;
-	Spheres[0].py = (LENGTH_OF_BOX - DIAMETER)*rand()/RAND_MAX - (LENGTH_OF_BOX - DIAMETER)/2.0;
-	Spheres[0].pz = (LENGTH_OF_BOX - DIAMETER)*rand()/RAND_MAX - (LENGTH_OF_BOX - DIAMETER)/2.0;
-	
 
-	for(int i = 1; i < NUMBER_OF_BALLS; i++)
+	for(int i = 0; i < NUMBER_OF_BALLS; i++)
 	{
 		Spheres[i].px = (LENGTH_OF_BOX - DIAMETER)*rand()/RAND_MAX - (LENGTH_OF_BOX - DIAMETER)/2.0;
 		Spheres[i].py = (LENGTH_OF_BOX - DIAMETER)*rand()/RAND_MAX - (LENGTH_OF_BOX - DIAMETER)/2.0;
 		Spheres[i].pz = (LENGTH_OF_BOX - DIAMETER)*rand()/RAND_MAX - (LENGTH_OF_BOX - DIAMETER)/2.0;
 	
-		for(int j = 0; j < NUMBER_OF_BALLS; j++)	
+		for(int j = i-1; j > 0; j--)	
 		{
 			dx = Spheres[i].px - Spheres[j].px;
 			dy = Spheres[i].py - Spheres[j].py;
 			dz = Spheres[i].pz - Spheres[j].pz;
 			seperation = sqrt(dx*dx + dy*dy + dz*dz);
+			printf("separation generated\n");
 			if(seperation < DIAMETER)
 			{
 				i = i-1;
+				printf("separation test failed, breaking inner loop\n");
 				break;
 			}
 		}	
 	}
+	printf("ball positions set\n");
 	
 	for(int i = 0; i < NUMBER_OF_BALLS; i ++)
 	{
@@ -85,7 +83,9 @@ void set_initial_conditions()
 		Spheres[i].vz = 2.0*MAX_VELOCITY*rand()/RAND_MAX - MAX_VELOCITY;
 
 		Spheres[i].mass = 1.0;
+		
 	}	
+	printf("set mass and velocity\n");
 }
 
 void Drawwirebox()
@@ -134,13 +134,15 @@ void draw_picture()
 	
 	for(int i = 0; i < NUMBER_OF_BALLS; i++)
 	{
-		glColor3d(1.0,0.5,1.0);
+		glColor3d(1.0,0.5,0.0);
 		glPushMatrix();
 		glTranslatef(Spheres[i].px, Spheres[i].py, Spheres[i].pz);
 		glutSolidSphere(radius,20,20);
 		glPopMatrix();
+		
 	}	
-	
+	printf("balls drawn\n");
+
 	glutSwapBuffers();
 }
 
@@ -310,11 +312,13 @@ void reshape(int w, int h)
 void setup()
 {
 	Spheres = (spheres*)malloc(NUMBER_OF_BALLS*sizeof(spheres));
+	printf("\nSetup complete\n");
 }
 
 void cleanup()
 {
 	free(Spheres);
+	printf("\nCleaned up\n");
 }
 
 int main(int argc, char** argv)
