@@ -78,9 +78,9 @@ void set_initial_conditions()
 	
 	for(int i = 0; i < NUMBER_OF_BALLS; i ++)
 	{
-		Spheres[i].vx = 0*2.0*MAX_VELOCITY*rand()/RAND_MAX - MAX_VELOCITY;
-		Spheres[i].vy = 0*2.0*MAX_VELOCITY*rand()/RAND_MAX - MAX_VELOCITY;
-		Spheres[i].vz = 0*2.0*MAX_VELOCITY*rand()/RAND_MAX - MAX_VELOCITY;
+		Spheres[i].vx = 2.0*MAX_VELOCITY*rand()/RAND_MAX - MAX_VELOCITY;
+		Spheres[i].vy = 2.0*MAX_VELOCITY*rand()/RAND_MAX - MAX_VELOCITY;
+		Spheres[i].vz = 2.0*MAX_VELOCITY*rand()/RAND_MAX - MAX_VELOCITY;
 
 		Spheres[i].mass = 1.0;
 		
