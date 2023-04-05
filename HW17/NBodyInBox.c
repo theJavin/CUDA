@@ -37,8 +37,12 @@ const float YMin = -(LENGTH_OF_BOX/2.0);
 const float ZMin = -(LENGTH_OF_BOX/2.0);
 
 // Globals
-float px1, py1, pz1, vx1, vy1, vz1, fx1, fy1, fz1, mass1; 
-float px2, py2, pz2, vx2, vy2, vz2, fx2, fy2, fz2, mass2;
+struct spheres
+{
+	float px, py, pz, vx, vy, vz, fx, fy, fz, mass; 
+};
+
+struct spheres *Spheres;
 
 void set_initial_conditions()
 { 
