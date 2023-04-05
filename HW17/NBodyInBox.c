@@ -191,7 +191,7 @@ void get_forces()
 {
 	float dx,dy,dz,r,r2,dvx,dvy,dvz,forceMag,inout;
 	
-	for(int i = 0; i < NUMBER_OF_BALLS; i++)
+	for(int i = 0; i < NUMBER_OF_BALLS-1; i++)
 	{
 		for(int j = 0; j < NUMBER_OF_BALLS; j++)
 		{
