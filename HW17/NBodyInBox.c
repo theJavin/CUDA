@@ -24,12 +24,12 @@
 
 #define DAMP 0.0
 
-#define DRAW 100
+#define DRAW 10
 
 #define LENGTH_OF_BOX 6.0
-#define MAX_VELOCITY 5.0
+#define MAX_VELOCITY 50.0
 
-#define NUMBER_OF_BALLS 5
+#define NUMBER_OF_BALLS 10
 
 const float XMax = (LENGTH_OF_BOX/2.0);
 const float YMax = (LENGTH_OF_BOX/2.0);
@@ -74,7 +74,7 @@ void set_initial_conditions()
 			}
 		}	
 	}
-	printf("ball positions set\n");
+	printf("ball positions set\n"); 
 	
 	for(int i = 0; i < NUMBER_OF_BALLS; i ++)
 	{
@@ -141,7 +141,7 @@ void draw_picture()
 		glPopMatrix();
 		
 	}	
-	printf("balls drawn\n");
+	
 
 	glutSwapBuffers();
 }
@@ -195,35 +195,39 @@ void get_forces()
 	{
 		for(int j = 0; j < NUMBER_OF_BALLS; j++)
 		{
-			dx = Spheres[j].px - Spheres[i].px;
-			dy = Spheres[j].py - Spheres[i].py;
-			dz = Spheres[j].pz - Spheres[i].pz;
+			if(i!=j)
+			{	
+				dx = Spheres[j].px - Spheres[i].px;
+				dy = Spheres[j].py - Spheres[i].py;
+				dz = Spheres[j].pz - Spheres[i].pz;
+							
+				r2 = dx*dx + dy*dy + dz*dz;
+				r = sqrt(r2);
+
+				forceMag =  Spheres[i].mass*Spheres[j].mass*GRAVITY/r2;
 						
-			r2 = dx*dx + dy*dy + dz*dz;
-			r = sqrt(r2);
+				if (r < DIAMETER)
+				{
+					dvx = Spheres[j].vx - Spheres[i].vx;
+					dvy = Spheres[j].vy - Spheres[i].vy;
+					dvz = Spheres[j].vz - Spheres[i].vz;
+					inout = dx*dvx + dy*dvy + dz*dvz;
+					if(inout <= 0.0)
+					{
+						forceMag +=  SPRING_STRENGTH*(r - DIAMETER);
+					}
+					else
+					{
+						forceMag +=  SPRING_REDUCTION*SPRING_STRENGTH*(r - DIAMETER);
+					}
+				}
 
-			forceMag =  Spheres[i].mass*Spheres[j].mass*GRAVITY/r2;
-					
-			if (r < DIAMETER)
-			{
-				dvx = Spheres[j].vx - Spheres[i].vx;
-				dvy = Spheres[j].vy - Spheres[i].vy;
-				dvz = Spheres[j].vz - Spheres[i].vz;
-				inout = dx*dvx + dy*dvy + dz*dvz;
-				if(inout <= 0.0)
-				{
-					forceMag +=  SPRING_STRENGTH*(r - DIAMETER);
-				}
-				else
-				{
-					forceMag +=  SPRING_REDUCTION*SPRING_STRENGTH*(r - DIAMETER);
-				}
+				Spheres[i].fx = forceMag*dx/r;
+				Spheres[i].fy = forceMag*dy/r;
+				Spheres[i].fz = forceMag*dz/r;
 			}
-
-			Spheres[i].fx += forceMag*dx/r;
-			Spheres[i].fy += forceMag*dy/r;
-			Spheres[i].fz += forceMag*dz/r;
-		}
+				
+		}	
 	}
 }
 
@@ -329,7 +333,7 @@ int main(int argc, char** argv)
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_DEPTH | GLUT_RGB);
 	glutInitWindowSize(XWindowSize,YWindowSize);
 	glutInitWindowPosition(0,0);
-	glutCreateWindow("2 Body 3D");
+	glutCreateWindow("wow... balls");
 	GLfloat light_position[] = {1.0, 1.0, 1.0, 0.0};
 	GLfloat light_ambient[]  = {0.0, 0.0, 0.0, 1.0};
 	GLfloat light_diffuse[]  = {1.0, 1.0, 1.0, 1.0};
