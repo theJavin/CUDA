@@ -144,13 +144,13 @@ __global__ void getForces(float4 *pos, float4 *vel, float4 * force)
 	shPos[threadIdx.x] = pos[threadIdx.x + blockDim.x*j];
 	__syncthreads();
 
-	#pragma unroll 32
+	//#pragma unroll 32
 	for(int i=0; i < blockDim.x; i++)	
 	{
 		ii = i + blockDim.x*j;
 		    if(ii != id && ii < N) 
 		    {
-		    	force_mag = getBodyBodyForce(posMe, shPos[i]);
+		    force_mag = getBodyBodyForce(posMe, shPos[i]);
 			forceSum.x += force_mag.x;
 			forceSum.y += force_mag.y;
 			forceSum.z += force_mag.z;
