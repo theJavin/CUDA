@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <cuda.h>
 
-#define BLOCK_SIZE 256
+#define BLOCK_SIZE 32
 
 #define N 8000
 
@@ -37,13 +37,14 @@ dim3 Block, Grid;
 void set_initail_conditions()
 {
 	int i,j,k,num,particles_per_side;
-	float position_start, temp;
-	float initail_seperation;
+	float position_start;
+	//float initail_seperation;
 
-	temp = pow((float)N,1.0/3.0) + 0.99999;
-	particles_per_side = temp;
-    	position_start = -(particles_per_side -1.0)/2.0;
-	initail_seperation = 2.0;
+	//temp = pow((float)N,1.0/3.0) + 0.99999;
+	//temp = cbrt((float)N) + 0.99999;
+	particles_per_side = cbrt((float)N) + 0.99999;
+    position_start = 0.5-particles_per_side/2.0;
+	//initail_seperation = 2.0;
 	
 	for(i=0; i<N; i++)
 	{
@@ -57,10 +58,10 @@ void set_initail_conditions()
 		{
 			for(k=0; k<particles_per_side; k++)
 			{
-			    if(N <= num) break;
-				Position[num].x = position_start + i*initail_seperation;
-				Position[num].y = position_start + j*initail_seperation;
-				Position[num].z = position_start + k*initail_seperation;
+			    //if(N <= num) break;
+				Position[num].x = position_start + i*2.0;
+				Position[num].y = position_start + j*2.0;
+				Position[num].z = position_start + k*2.0;
 				Velocity[num].x = 0.0;
 				Velocity[num].y = 0.0;
 				Velocity[num].z = 0.0;
@@ -87,13 +88,11 @@ void setupDevice()
 
 void draw_picture()
 {
-	int i;
-
 	glClear(GL_COLOR_BUFFER_BIT);
 	glClear(GL_DEPTH_BUFFER_BIT);
 
 	glColor3d(1.0,1.0,0.5);
-	for(i=0; i<N; i++)
+	for(int i=0; i<N; i++)
 	{
 		glPushMatrix();
 		glTranslatef(Position[i].x, Position[i].y, Position[i].z);
@@ -111,13 +110,14 @@ __device__ float4 getBodyBodyForce(float4 p0, float4 p1)
 	float dy = p1.y - p0.y;
 	float dz = p1.z - p0.z;
 	float r2 = dx*dx + dy*dy + dz*dz;
-	float r = sqrt(r2);
+	//float r = sqrt(r2);
 
-	float force  = (G*p0.w*p1.w)/(r2) - (H*p0.w*p1.w)/(r2*r2);
+	//float force  = (G*p0.w*p1.w)/(r2) - (H*p0.w*p1.w)/(r2*r2);
+	float force  = ((p0.w*p1.w)/r2)*(G - H/r2);
 
-	f.x = force*dx/r;
-	f.y = force*dy/r;
-	f.z = force*dz/r;
+	f.x = force*dx/sqrt(r2);
+	f.y = force*dy/sqrt(r2);
+	f.z = force*dz/sqrt(r2);
 
 	return(f);
 }
@@ -130,7 +130,7 @@ __global__ void getForces(float4 *pos, float4 *vel, float4 * force)
 	__shared__ float4 shPos[BLOCK_SIZE];
 	int id = threadIdx.x + blockDim.x*blockIdx.x;
     
-    	forceSum.x = 0.0;
+    forceSum.x = 0.0;
 	forceSum.y = 0.0;
 	forceSum.z = 0.0;
 		
@@ -144,7 +144,7 @@ __global__ void getForces(float4 *pos, float4 *vel, float4 * force)
 	shPos[threadIdx.x] = pos[threadIdx.x + blockDim.x*j];
 	__syncthreads();
 
-	//#pragma unroll 32
+	#pragma unroll 32
 	for(int i=0; i < blockDim.x; i++)	
 	{
 		ii = i + blockDim.x*j;
@@ -170,17 +170,17 @@ __global__ void moveBodies(float time, float4 *pos, float4 *vel, float4 * force)
     int id = threadIdx.x + blockDim.x*blockIdx.x;
     if(id < N)
     {
-		if(time == 0.0)
-		{
-			vel[id].x += ((force[id].x-DAMP*vel[id].x)/pos[id].w)*0.5*DT;
-			vel[id].y += ((force[id].y-DAMP*vel[id].y)/pos[id].w)*0.5*DT;
-			vel[id].z += ((force[id].z-DAMP*vel[id].z)/pos[id].w)*0.5*DT;
-		}
-		else
+		if(time != 0.0)
 		{
 			vel[id].x += ((force[id].x-DAMP*vel[id].x)/pos[id].w)*DT;
 			vel[id].y += ((force[id].y-DAMP*vel[id].y)/pos[id].w)*DT;
 			vel[id].z += ((force[id].z-DAMP*vel[id].z)/pos[id].w)*DT;
+		}
+		else
+		{
+			vel[id].x += ((force[id].x-DAMP*vel[id].x)/pos[id].w)*0.5*DT;
+			vel[id].y += ((force[id].y-DAMP*vel[id].y)/pos[id].w)*0.5*DT;
+			vel[id].z += ((force[id].z-DAMP*vel[id].z)/pos[id].w)*0.5*DT;
 		}
 
 		pos[id].x += vel[id].x*DT;
@@ -194,8 +194,8 @@ void n_body()
 	int   tdraw = 0; 
 	float time = 0.0;
 	
-    	cudaMemcpy( PositionGPU, Position, N *sizeof(float4), cudaMemcpyHostToDevice );
-    	cudaMemcpy( VelocityGPU, Velocity, N *sizeof(float4), cudaMemcpyHostToDevice );
+    	cudaMemcpyAsync( PositionGPU, Position, N *sizeof(float4), cudaMemcpyHostToDevice );
+    	cudaMemcpyAsync( VelocityGPU, Velocity, N *sizeof(float4), cudaMemcpyHostToDevice );
 	while(time < STOP_TIME)
 	{	
 		getForces<<<Grid, Block>>>(PositionGPU, VelocityGPU, ForceGPU);
@@ -203,7 +203,7 @@ void n_body()
         
 		if(tdraw == DRAW) 
 		{
-			cudaMemcpy( Position, PositionGPU, N *sizeof(float4), cudaMemcpyDeviceToHost );
+			cudaMemcpyAsync( Position, PositionGPU, N *sizeof(float4), cudaMemcpyDeviceToHost );
 			draw_picture();
 			printf("\n Time = %f \n", time);
 			tdraw = 0;
@@ -255,8 +255,6 @@ void reshape(int w, int h)
 
 int main(int argc, char** argv)
 {
-    
-    
     glutInit(&argc,argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_DEPTH | GLUT_RGB);
     glutInitWindowSize(XWindowSize,YWindowSize);
